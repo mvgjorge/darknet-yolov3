@@ -28,9 +28,11 @@ Windows Python 2.7 version: https://github.com/AlexeyAB/darknet/blob/fc496d52bf2
 """
 #pylint: disable=R, W0401, W0614, W0703
 from ctypes import *
+from PIL import Image
 import math
 import random
 import os
+import numpy as np
 
 def sample(probs):
     s = sum(probs)
@@ -76,7 +78,7 @@ class METADATA(Structure):
 
 
 
-#lib = CDLL("/home/pjreddie/documents/darknet/libdarknet.so", RTLD_GLOBAL)
+#lib = CDLL("/workspace/darknet/libdarknet.so", RTLD_GLOBAL)
 #lib = CDLL("libdarknet.so", RTLD_GLOBAL)
 hasGPU = True
 if os.name == "nt":
@@ -121,7 +123,7 @@ if os.name == "nt":
             lib = CDLL(winGPUdll, RTLD_GLOBAL)
             print("Environment variables indicated a CPU run, but we didn't find `"+winNoGPUdll+"`. Trying a GPU run anyway.")
 else:
-    lib = CDLL("./libdarknet.so", RTLD_GLOBAL)
+    lib = CDLL("/workspace/darknet/libdarknet.so", RTLD_GLOBAL)
 lib.network_width.argtypes = [c_void_p]
 lib.network_width.restype = c_int
 lib.network_height.argtypes = [c_void_p]
@@ -135,6 +137,14 @@ def network_width(net):
 
 def network_height(net):
     return lib.network_height(net)
+
+
+set_batch_network = lib.set_batch_network
+set_batch_network.argtypes = [c_void_p, c_int]
+
+resize_network = lib.resize_network
+resize_network.argtypes = [c_void_p, c_int, c_int]
+resize_network.restype = c_int
 
 predict = lib.network_predict_ptr
 predict.argtypes = [c_void_p, POINTER(c_float)]
@@ -195,6 +205,11 @@ load_meta = lib.get_metadata
 lib.get_metadata.argtypes = [c_char_p]
 lib.get_metadata.restype = METADATA
 
+resize_image = lib.resize_image
+resize_image.argtypes = [IMAGE, c_int, c_int]
+resize_image.restype = IMAGE
+
+
 load_image = lib.load_image_color
 load_image.argtypes = [c_char_p, c_int, c_int]
 load_image.restype = IMAGE
@@ -211,7 +226,6 @@ predict_image_letterbox.argtypes = [c_void_p, IMAGE]
 predict_image_letterbox.restype = POINTER(c_float)
 
 def array_to_image(arr):
-    import numpy as np
     # need to return old values to avoid python freeing memory
     arr = arr.transpose(2,0,1)
     c = arr.shape[0]
@@ -221,6 +235,7 @@ def array_to_image(arr):
     data = arr.ctypes.data_as(POINTER(c_float))
     im = IMAGE(w,h,c,data)
     return im, arr
+
 
 def classify(net, meta, im):
     out = predict_image(net, im)
@@ -234,12 +249,20 @@ def classify(net, meta, im):
     res = sorted(res, key=lambda x: -x[1])
     return res
 
-def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
+
+def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug=False):
     """
     Performs the meat of the detection
     """
     #pylint: disable= C0321
-    im = load_image(image, 0, 0)
+    im = load_image(image, 0,0)
+    # mirar lo del letterbox 
+    # dibuixar els quadradets detectats I ficar-ho al visdom
+    #sized = resize_image(im, 608,608)
+    #print('Print resized')
+    #print(sized.w, sized.h)
+    #print('Sizes sended to the neural net')
+    #print(im.w, im.h)
     if debug: print("Loaded image")
     ret = detect_image(net, meta, im, thresh, hier_thresh, nms, debug)
     free_image(im)
