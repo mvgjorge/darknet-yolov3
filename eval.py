@@ -33,6 +33,7 @@ def parse_args():
 	parser.add_argument('--test_file', type=str,
 						default='/home/case/darknet/data/re_logo_v12/val.txt')
 	parser.add_argument('--results_file', type=str)
+	parser.add_argument('--print_results_per_class', type=bool, default=False)
 	return parser.parse_args()
 
 
@@ -72,9 +73,7 @@ def init_net(args):
 
 	dn.set_batch_network(net, 1)
 	dn.resize_network(net, args.imsize, args.imsize)
-	sys.stderr.write('Resized to %d x %d\n' %
-					 (dn.network_width(net), dn.network_height(net)))
-
+	sys.stderr.write('Resized to %d x %d\n' % (dn.network_width(net), dn.network_height(net)))
 	return net
 
 
@@ -323,7 +322,6 @@ def main():
 		pbar.update(1)
 	pbar.close()
 
-		
 	# Save detections
 	if args.results_file:
 		with open(args.results_file, 'w') as f:
@@ -334,17 +332,18 @@ def main():
 				for det in pred:
 					x, y, w, h = det.bbox
 
-					xmin = x - w/2 + 1
-					xmax = x + w/2 + 1
-					ymin = y - h/2 + 1
-					ymax = y + h/2 + 1
+					xmin = x - w / 2 + 1
+					xmax = x + w / 2 + 1
+					ymin = y - h / 2 + 1
+					ymax = y + h / 2 + 1
 
 					if xmin < 1: xmin = 1
 					if ymin < 1: ymin = 1
 					if xmax > im_w: xmax = w
 					if ymax > im_h: ymax = h
 
-					f.write('{} {} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}\n'.format(name, labels[det.label], det.confidence, xmin, ymin, xmax, ymax))
+					f.write('{} {} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}\n'.format(name, labels[det.label], det.confidence,
+																				xmin, ymin, xmax, ymax))
 
 	print('\nResults')
 	print('-------')
@@ -360,16 +359,16 @@ def main():
 		print('Threshold: {:.2f}, Precision: {:.4f}, Recall: {:.4f}'.format(thresh, prec, rec))
 		# print('Threshold: {:.2f}, Precision: {:.4f}, Specificity: {:.4f}, Recall: {:.4f}'.format(thresh, prec, spc, rec))
 
-		print_results_per_class = True
-		if print_results_per_class:
+		if args.print_results_per_class:
 			for i in range(len(labels)):
 				prec = tp[i] / (tp[i] + fp[i]) if (tp[i] + fp[i]) > 0 else 0
 				rec = tp[i] / npos[i] if npos[i] > 0 else 0
 				# spc = 1 - fp[i] / nneg[i] if nneg[i] > 0 else 0
 
 				print('  {}, {:.4f}, {:.4f}'.format(labels[i], prec, rec))
-		# print('  {}, {:.4f}, {:.4f}, {:.4f}'.format(labels[i], prec, rec, spc))
-		# print('  {}, {:.4f}, {:.4f}'.format(labels[i], spc, rec))
+
+	# print('  {}, {:.4f}, {:.4f}, {:.4f}'.format(labels[i], prec, rec, spc))
+	# print('  {}, {:.4f}, {:.4f}'.format(labels[i], spc, rec))
 
 
 if __name__ == '__main__':
