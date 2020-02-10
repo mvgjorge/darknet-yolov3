@@ -1,31 +1,4 @@
 # Yolo-v3 and Yolo-v2 for Windows and Linux
-### (neural network for object detection) - Tensor Cores can be used on [Linux](https://github.com/AlexeyAB/darknet#how-to-compile-on-linux) and [Windows](https://github.com/AlexeyAB/darknet#how-to-compile-on-windows-using-vcpkg)
-
-More details: http://pjreddie.com/darknet/yolo/
-
-
-[![CircleCI](https://circleci.com/gh/AlexeyAB/darknet.svg?style=svg)](https://circleci.com/gh/AlexeyAB/darknet)
-[![TravisCI](https://travis-ci.org/AlexeyAB/darknet.svg?branch=master)](https://travis-ci.org/AlexeyAB/darknet)
-[![AppveyorCI](https://ci.appveyor.com/api/projects/status/594bwb5uoc1fxwiu/branch/master?svg=true)](https://ci.appveyor.com/project/AlexeyAB/darknet/branch/master)
-[![Contributors](https://img.shields.io/github/contributors/AlexeyAB/Darknet.svg)](https://github.com/AlexeyAB/darknet/graphs/contributors)
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](https://github.com/AlexeyAB/darknet/blob/master/LICENSE)  
-
-
-* [Requirements (and how to install dependecies)](#requirements)
-* [Pre-trained models](#pre-trained-models)
-* [Explanations in issues](https://github.com/AlexeyAB/darknet/issues?q=is%3Aopen+is%3Aissue+label%3AExplanations)
-* [Yolo v3 in other frameworks (TensorRT, TensorFlow, PyTorch, OpenVINO, OpenCV-dnn, TVM,...)](#yolo-v3-in-other-frameworks)
-* [Datasets](#datasets)
-
-0.  [Improvements in this repository](#improvements-in-this-repository)
-1.  [How to use](#how-to-use-on-the-command-line)
-2.  How to compile on Linux
-    * [Using cmake](#how-to-compile-on-linux-using-cmake)
-    * [Using make](#how-to-compile-on-linux-using-make)
-3.  How to compile on Windows
-    * [Using CMake-GUI](#how-to-compile-on-windows-using-cmake-gui)
-    * [Using vcpkg](#how-to-compile-on-windows-using-vcpkg)
-    * [Legacy way](#how-to-compile-on-windows-legacy-way)
 4.  [How to train (Pascal VOC Data)](#how-to-train-pascal-voc-data)
 5.  [How to train with multi-GPU:](#how-to-train-with-multi-gpu)
 6.  [How to train (to detect your custom objects)](#how-to-train-to-detect-your-custom-objects)
@@ -36,8 +9,6 @@ More details: http://pjreddie.com/darknet/yolo/
 11.  [How to mark bounded boxes of objects and create annotation files](#how-to-mark-bounded-boxes-of-objects-and-create-annotation-files)
 12. [How to use Yolo as DLL and SO libraries](#how-to-use-yolo-as-dll-and-so-libraries)
 
-|  ![Darknet Logo](http://pjreddie.com/media/files/darknet-black-small.png) | &nbsp; ![map_fps](https://user-images.githubusercontent.com/4096485/71702416-6645dc00-2de0-11ea-8d65-de7d4b604021.png) mAP@0.5 (AP50) - FPS (GeForce 1080 Ti) https://arxiv.org/abs/1911.11929 https://github.com/WongKinYiu/CrossStagePartialNetworks - more models |
-|---|---|
 
 * Yolo v3 on MS COCO: [Speed / Accuracy (mAP@0.5) chart](https://user-images.githubusercontent.com/4096485/52151356-e5d4a380-2683-11e9-9d7d-ac7bc192c477.jpg)
 * Yolo v3 on MS COCO (Yolo v3 vs RetinaNet) - Figure 3: https://arxiv.org/pdf/1804.02767v1.pdf
@@ -95,34 +66,8 @@ You can get cfg-files by path: `darknet/cfg/`
 * on Linux **GCC or Clang**, on Windows **MSVC 2015/2017/2019** https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community
 
 
-#### Yolo v3 in other frameworks
-
-* **TensorFlow:** convert `yolov3.weights`/`cfg` files to `yolov3.ckpt`/`pb/meta`: by using [mystic123](https://github.com/mystic123/tensorflow-yolo-v3) or [jinyu121](https://github.com/jinyu121/DW2TF) projects, and [TensorFlow-lite](https://www.tensorflow.org/lite/guide/get_started#2_convert_the_model_format)
-* **Intel OpenVINO 2019 R1:** (Myriad X / USB Neural Compute Stick / Arria FPGA): read this [manual](https://software.intel.com/en-us/articles/OpenVINO-Using-TensorFlow#converting-a-darknet-yolo-model)
-* **OpenCV-dnn** the fastest implementation for CPU (x86/ARM-Android), OpenCV can be compiled with [OpenVINO-backend](https://github.com/opencv/opencv/wiki/Intel's-Deep-Learning-Inference-Engine-backend) for running on (Myriad X / USB Neural Compute Stick / Arria FPGA), use `yolov3.weights`/`cfg` with: [C++ example](https://github.com/opencv/opencv/blob/8c25a8eb7b10fb50cda323ee6bec68aa1a9ce43c/samples/dnn/object_detection.cpp#L192-L221) or [Python example](https://github.com/opencv/opencv/blob/8c25a8eb7b10fb50cda323ee6bec68aa1a9ce43c/samples/dnn/object_detection.py#L129-L150)
-* **PyTorch > ONNX > CoreML > iOS** how to convert cfg/weights-files to pt-file: [ultralytics/yolov3](https://github.com/ultralytics/yolov3#darknet-conversion) and [iOS App](https://itunes.apple.com/app/id1452689527)
-* **TensorRT** for YOLOv3 (-70% faster inference): [Yolo is natively supported in DeepStream 4.0](https://news.developer.nvidia.com/deepstream-sdk-4-now-available/)
-* **TVM** - compilation of deep learning models (Keras, MXNet, PyTorch, Tensorflow, CoreML, DarkNet) into minimum deployable modules on diverse hardware backends (CPUs, GPUs, FPGA, and specialized accelerators): https://tvm.ai/about
-* **Netron** - Visualizer for neural networks: https://github.com/lutzroeder/netron
-
-#### Datasets
-
-* MS COCO: use `./scripts/get_coco_dataset.sh` to get labeled MS COCO detection dataset
-* OpenImages: use `python ./scripts/get_openimages_dataset.py` for labeling train detection dataset
-* Pascal VOC: use `python ./scripts/voc_label.py` for labeling Train/Test/Val detection datasets
-* ILSVRC2012 (ImageNet classification): use `./scripts/get_imagenet_train.sh` (also `imagenet_label.sh` for labeling valid set)
-* German/Belgium/Russian/LISA/MASTIF Traffic Sign Datasets for Detection - use this parsers: https://github.com/angeligareta/Datasets2Darknet#detection-task
-* List of other datasets: https://github.com/AlexeyAB/darknet/tree/master/scripts#datasets
-
-##### Examples of results
-
-[![Yolo v3](http://img.youtube.com/vi/VOC3huqHrss/0.jpg)](https://www.youtube.com/watch?v=MPU2HistivI "Yolo v3")
-
-Others: https://www.youtube.com/user/pjreddie/videos
-
 ### Improvements in this repository
 
-* added support for Windows
 * added State-of-Art models: CSP, PRN, EfficientNet
 * added layers: [conv_lstm], [scale_channels] SE/ASFF/BiFPN, [local_avgpool], [sam], [Gaussian_yolo], [reorg3d] (fixed [reorg]), fixed [batchnorm]
 * added the ability for training recurrent models (with layers conv-lstm`[conv_lstm]`/conv-rnn`[crnn]`) for accurate detection on video
@@ -225,118 +170,6 @@ Before make, you can set such options in the `Makefile`: [link](https://github.c
 
 To run Darknet on Linux use examples from this article, just use `./darknet` instead of `darknet.exe`, i.e. use this command: `./darknet detector test ./cfg/coco.data ./cfg/yolov3.cfg ./yolov3.weights`
 
-### How to compile on Windows (using `CMake-GUI`)
-
-This is the recommended approach to build Darknet on Windows if you have already
-installed Visual Studio 2015/2017/2019, CUDA > 10.0, cuDNN > 7.0, and
-OpenCV > 2.4.
-
-Use `CMake-GUI` as shown here on this [**IMAGE**](https://user-images.githubusercontent.com/4096485/55107892-6becf380-50e3-11e9-9a0a-556a943c429a.png):
-
-1. Configure
-2. Optional platform for generator (Set: x64)
-3. Finish
-4. Generate
-5. Open Project
-6. Set: x64 & Release
-7. Build
-8. Build solution
-
-### How to compile on Windows (using `vcpkg`)
-
-If you have already installed Visual Studio 2015/2017/2019, CUDA > 10.0,
-cuDNN > 7.0, OpenCV > 2.4, then to compile Darknet it is recommended to use
-[CMake-GUI](#how-to-compile-on-windows-using-cmake-gui).
-
-Otherwise, follow these steps:
-
-1. Install or update Visual Studio to at least version 2017, making sure to have it fully patched (run again the installer if not sure to automatically update to latest version). If you need to install from scratch, download VS from here: [Visual Studio Community](http://visualstudio.com)
-
-2. Install CUDA and cuDNN
-
-3. Install `git` and `cmake`. Make sure they are on the Path at least for the current account
-
-4. Install [vcpkg](https://github.com/Microsoft/vcpkg) and try to install a test library to make sure everything is working, for example `vcpkg install opengl`
-
-5. Define an environment variables, `VCPKG_ROOT`, pointing to the install path of `vcpkg`
-
-6. Define another environment variable, with name `VCPKG_DEFAULT_TRIPLET` and value `x64-windows`
-
-7. Open Powershell and type these commands:
-
-```PowerShell
-PS \>                  cd $env:VCPKG_ROOT
-PS Code\vcpkg>         .\vcpkg install pthreads opencv[ffmpeg] #replace with opencv[cuda,ffmpeg] in case you want to use cuda-accelerated openCV
-```
-
-8.  Open Powershell, go to the `darknet` folder and build with the command `.\build.ps1`. If you want to use Visual Studio, you will find two custom solutions created for you by CMake after the build, one in `build_win_debug` and the other in `build_win_release`, containing all the appropriate config flags for your system.
-
-### How to compile on Windows (legacy way)
-
-1. If you have **CUDA 10.0, cuDNN 7.4 and OpenCV 3.x** (with paths: `C:\opencv_3.0\opencv\build\include` & `C:\opencv_3.0\opencv\build\x64\vc14\lib`), then open `build\darknet\darknet.sln`, set **x64** and **Release** https://hsto.org/webt/uh/fk/-e/uhfk-eb0q-hwd9hsxhrikbokd6u.jpeg and do the: Build -> Build darknet. Also add Windows system variable `CUDNN` with path to CUDNN: https://user-images.githubusercontent.com/4096485/53249764-019ef880-36ca-11e9-8ffe-d9cf47e7e462.jpg
-
-    1.1. Find files `opencv_world320.dll` and `opencv_ffmpeg320_64.dll` (or `opencv_world340.dll` and `opencv_ffmpeg340_64.dll`) in `C:\opencv_3.0\opencv\build\x64\vc14\bin` and put it near with `darknet.exe`
-    
-    1.2 Check that there are `bin` and `include` folders in the `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0` if aren't, then copy them to this folder from the path where is CUDA installed
-    
-    1.3. To install CUDNN (speedup neural network), do the following:
-      
-    * download and install **cuDNN v7.4.1 for CUDA 10.0**: https://developer.nvidia.com/rdp/cudnn-archive
-      
-    * add Windows system variable `CUDNN` with path to CUDNN: https://user-images.githubusercontent.com/4096485/53249764-019ef880-36ca-11e9-8ffe-d9cf47e7e462.jpg
-    
-    * copy file `cudnn64_7.dll` to the folder `\build\darknet\x64` near with `darknet.exe`
-    
-    1.4. If you want to build **without CUDNN** then: open `\darknet.sln` -> (right click on project) -> properties  -> C/C++ -> Preprocessor -> Preprocessor Definitions, and remove this: `CUDNN;`
-
-2. If you have other version of **CUDA (not 10.0)** then open `build\darknet\darknet.vcxproj` by using Notepad, find 2 places with "CUDA 10.0" and change it to your CUDA-version. Then open `\darknet.sln` -> (right click on project) -> properties  -> CUDA C/C++ -> Device and remove there `;compute_75,sm_75`. Then do step 1
-
-3. If you **don't have GPU**, but have **OpenCV 3.0** (with paths: `C:\opencv_3.0\opencv\build\include` & `C:\opencv_3.0\opencv\build\x64\vc14\lib`), then open `build\darknet\darknet_no_gpu.sln`, set **x64** and **Release**, and do the: Build -> Build darknet_no_gpu
-
-4. If you have **OpenCV 2.4.13** instead of 3.0 then you should change paths after `\darknet.sln` is opened
-
-    4.1 (right click on project) -> properties  -> C/C++ -> General -> Additional Include Directories:  `C:\opencv_2.4.13\opencv\build\include`
-  
-    4.2 (right click on project) -> properties  -> Linker -> General -> Additional Library Directories: `C:\opencv_2.4.13\opencv\build\x64\vc14\lib`
-    
-5. If you have GPU with Tensor Cores (nVidia Titan V / Tesla V100 / DGX-2 and later) speedup Detection 3x, Training 2x:
-    `\darknet.sln` -> (right click on project) -> properties -> C/C++ -> Preprocessor -> Preprocessor Definitions, and add here: `CUDNN_HALF;`
-    
-    **Note:** CUDA must be installed only after Visual Studio has been installed.
-
-### How to compile (custom):
-
-Also, you can to create your own `darknet.sln` & `darknet.vcxproj`, this example for CUDA 9.1 and OpenCV 3.0
-
-Then add to your created project:
-- (right click on project) -> properties  -> C/C++ -> General -> Additional Include Directories, put here: 
-
-`C:\opencv_3.0\opencv\build\include;..\..\3rdparty\include;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(CUDNN)\include`
-- (right click on project) -> Build dependecies -> Build Customizations -> set check on CUDA 9.1 or what version you have - for example as here: http://devblogs.nvidia.com/parallelforall/wp-content/uploads/2015/01/VS2013-R-5.jpg
-- add to project:
-    * all `.c` files
-    * all `.cu` files 
-    * file `http_stream.cpp` from `\src` directory
-    * file `darknet.h` from `\include` directory
-- (right click on project) -> properties  -> Linker -> General -> Additional Library Directories, put here: 
-
-`C:\opencv_3.0\opencv\build\x64\vc14\lib;$(CUDA_PATH)\lib\$(PlatformName);$(CUDNN)\lib\x64;%(AdditionalLibraryDirectories)`
-
--  (right click on project) -> properties  -> Linker -> Input -> Additional dependecies, put here: 
-
-`..\..\3rdparty\lib\x64\pthreadVC2.lib;cublas.lib;curand.lib;cudart.lib;cudnn.lib;%(AdditionalDependencies)`
-- (right click on project) -> properties -> C/C++ -> Preprocessor -> Preprocessor Definitions
-
-`OPENCV;_TIMESPEC_DEFINED;_CRT_SECURE_NO_WARNINGS;_CRT_RAND_S;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)`
-
-- compile to .exe (X64 & Release) and put .dll-s near with .exe: https://hsto.org/webt/uh/fk/-e/uhfk-eb0q-hwd9hsxhrikbokd6u.jpeg
-
-    * `pthreadVC2.dll, pthreadGC2.dll` from \3rdparty\dll\x64
-
-    * `cusolver64_91.dll, curand64_91.dll, cudart64_91.dll, cublas64_91.dll` - 91 for CUDA 9.1 or your version, from C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin
-
-    * For OpenCV 3.2: `opencv_world320.dll` and `opencv_ffmpeg320_64.dll` from `C:\opencv_3.0\opencv\build\x64\vc14\bin` 
-    * For OpenCV 2.4.13: `opencv_core2413.dll`, `opencv_highgui2413.dll` and `opencv_ffmpeg2413_64.dll` from  `C:\opencv_2.4.13\opencv\build\x64\vc14\bin`
 
 ## How to train (Pascal VOC Data):
 
@@ -658,14 +491,6 @@ Here you can find repository with GUI-software for marking bounded boxes of obje
 
 With example of: `train.txt`, `obj.names`, `obj.data`, `yolo-obj.cfg`, `air`1-6`.txt`, `bird`1-4`.txt` for 2 classes of objects (air, bird) and `train_obj.cmd` with example how to train this image-set with Yolo v2 & v3
 
-Different tools for marking objects in images:
-1. in C++: https://github.com/AlexeyAB/Yolo_mark 
-2. in Python: https://github.com/tzutalin/labelImg
-3. in Python: https://github.com/Cartucho/OpenLabeling
-4. in C++: https://www.ccoderun.ca/darkmark/
-5. in JavaScript: https://github.com/opencv/cvat
-
-
 ## Using Yolo9000
 
  Simultaneous detection and classification of 9000 objects: `darknet.exe detector test cfg/combine9k.data cfg/yolo9000.cfg yolo9000.weights data/dog.jpg`
@@ -690,14 +515,9 @@ Different tools for marking objects in images:
 
 ## How to use Yolo as DLL and SO libraries
 
-* on Linux
-    * using `build.sh` or
-    * build `darknet` using `cmake` or
-    * set `LIBSO=1` in the `Makefile` and do `make`
-* on Windows
-    * using `build.ps1` or
-    * build `darknet` using `cmake` or
-    * compile `build\darknet\yolo_cpp_dll.sln` solution or `build\darknet\yolo_cpp_dll_no_gpu.sln` solution
+* using `build.sh` or
+* build `darknet` using `cmake` or
+* set `LIBSO=1` in the `Makefile` and do `make`
 
 There are 2 APIs:
 * C API: https://github.com/AlexeyAB/darknet/blob/master/include/darknet.h
