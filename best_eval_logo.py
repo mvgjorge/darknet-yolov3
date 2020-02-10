@@ -20,24 +20,22 @@ import darknet as dn
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0)
-parser.add_argument('--thresh', type=float, default=.4)
 parser.add_argument('--imsize', type=int, default=576)
+parser.add_argument('--test_file', type=str)
+parser.add_argument('--thresh', type=float, default=.001)
+parser.add_argument('--iou_thresh', type=float, default=.01)
 parser.add_argument('--preproc', action="store_true")
 parser.add_argument('--weights_folder', type=str, default='/workspace/darknet/backup')
 parser.add_argument('--model', type=str, default='/workspace/darknet/cfg/yolo_watermark.cfg')
 parser.add_argument('--watermarked_images_path', type=str, default='/workspace/darknet/data/logos/images')
-parser.add_argument('--meta', type=str, default='/workspace/darknet/cfg/watermark.data')
 parser.add_argument('--weight_precision', type=float, default=0.5,
 					help='Percentage that will be used while scoring a model: precision * PERCENTAGE + recall * (1- PRECENTAGE)')
-parser.add_argument('--labels_path', type=str, default='/workspace/darknet/data/logos/labels/')
 parser.add_argument('--print_results_per_class', type=bool, default=False)
-parser.add_argument('--labels_file', type=str, default='/workspace/darknet/data/logos/labels.txt')
+parser.add_argument('--labels', type=str, default='/workspace/darknet/data/logos/labels.txt')
 parser.add_argument('--border', type=int, default=20)
 args = parser.parse_args()
 
 dn.set_gpu(args.gpu)
-metadata = dn.load_meta(args.meta.encode())
-labels = open(args.labels_file, 'r').read().splitlines()
 
 
 class Metadata:
@@ -79,6 +77,19 @@ def init_net(weights):
 	dn.resize_network(net, args.imsize, args.imsize)
 	sys.stderr.write('Resized to %d x %d\n' % (dn.network_width(net), dn.network_height(net)))
 	return net
+
+
+
+def parse_annotations_file(fp):
+	lines = open(fp, 'r').read().splitlines()
+	annotations = [line.split(' ') for line in lines]
+	true = []
+	for ann in annotations:
+		cls = int(ann[0])
+		bbox = tuple(map(float, ann[1:]))
+		true.append((cls, bbox))
+	return true
+
 
 
 def bbox_iou(boxA, boxB):
@@ -258,15 +269,10 @@ def print_setup():
 	print('\nExperimental setup')
 	print('------------------')
 	print('GPU: {}'.format(args.gpu))
-	print('Confidence threshold: {}'.format(args.thresh))
 	print('IoU threshold: {}'.format(args.iou_thresh))
 	print('Input size: {}'.format(args.imsize))
 	print('Model: {}'.format(args.model))
-	print('Weights: {}'.format(args.weights))
 	print('Labels: {}'.format(args.labels))
-	print('Test file: {}'.format(args.test_file))
-	print('Results file: {}'.format(args.results_file))
-	print(''
 
 
 def main():
@@ -284,15 +290,14 @@ def main():
 	print('Testing {} models'.format(len(models)))
 	pbar = tqdm(total=len(models))
 	best_score, best_precision, best_recall, threshold = 0, 0, 0, 0
+	avg_time = -1
 	for i in models:
 		print(args.model)
 		net = init_net(i.encode())
-
-		sys.stderr.write('Resized to %d x %d\n' % (dn.network_width(net), dn.network_height(net)))
 		# Predict images and load ground truth
 		predicted, actual = [], []
 
-		for count, img in enumerate(images):
+		for count, image in enumerate(images):
 			start = time.time()
 			img = Image.open(image)
 			arr = np.array(img)
@@ -317,6 +322,7 @@ def main():
 		precision_inside_model = 0
 		recall_inside_model = 0
 		threshold_inside_model = 0
+		del(net)
 		for thresh in np.arange(0.05, 1, 0.05):
 			# Compute evaluation metrics
 			tp, fp, npos = compute_metrics(predicted, actual, len(labels), thresh, args.iou_thresh)
@@ -332,7 +338,7 @@ def main():
 					rec = tp[j] / npos[j] if npos[j] > 0 else 0
 					# spc = 1 - fp[j] / nneg[j] if nneg[j] > 0 else 0
 
-			total_score = prec * args.weight_precision + rec * (1 - args.weight_accuracy)
+			total_score = prec * args.weight_precision + rec * (1 - args.weight_precision)
 			if total_score > score_inside_model:
 				score_inside_model = total_score
 				threshold_inside_model = thresh
@@ -345,7 +351,7 @@ def main():
 		if score_inside_model > best_score:
 			best_score = score_inside_model
 			best_precision = precision_inside_model
-			best_recall =
+			best_recall = recall_inside_model
 			threshold = threshold_inside_model
 			best = i
 	pbar.close()
